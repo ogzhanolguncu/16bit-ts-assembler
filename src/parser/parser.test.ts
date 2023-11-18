@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
-import { parse, updateAddMapWithLabels } from ".";
+import { parse, addAddressesOfLabelsToAddressMap } from ".";
 import { preDefinedSymsAndLabels } from "../constants/instruction-tables";
-import { readFile, removeNewlineAndComments } from "./parser-utils";
+import { readFile, removeWhitespaceAndComments } from "./parser-utils";
 
 test("should parse entire file without symbols correctly", async () => {
   const binaryOutput = await parse("./test-files/Add.asm");
@@ -12,9 +12,9 @@ test("should parse entire file without symbols correctly", async () => {
 
 test("should give correct updated addresses with labels", async () => {
   const text = await readFile("./test-files/Max.asm");
-  const sanitizedContent = removeNewlineAndComments(text);
+  const sanitizedContent = removeWhitespaceAndComments(text);
 
-  const updatedAddresses = updateAddMapWithLabels(sanitizedContent);
+  const updatedAddresses = addAddressesOfLabelsToAddressMap(sanitizedContent);
 
   const addresses = new Map<string, string>([
     ...preDefinedSymsAndLabels,
@@ -23,5 +23,5 @@ test("should give correct updated addresses with labels", async () => {
     ["INFINITE_LOOP", "14"],
   ]);
 
-  expect(updatedAddresses).toEqual(addresses);
+  expect(updatedAddresses.addresses).toEqual(addresses);
 });

@@ -1,47 +1,86 @@
+import { translateAInstruction } from "../a-instruction/a-instruction";
+import { translateCInstruction } from "../c-instruction";
 import { preDefinedSymsAndLabels } from "../constants/instruction-tables";
+import { extractFileName, pipe } from "../utils";
 import {
   extractLabelInParentheses,
   readFile,
   removeCommentsFromInstruction,
-  removeNewlineAndComments,
+  removeLabels,
+  removeWhitespaceAndComments,
 } from "./parser-utils";
 
 export const parse = async (filePath: string) => {
   const text = await readFile(filePath);
-  const sanitizedContent = removeNewlineAndComments(text);
-  const addresses = updateAddMapWithLabels(sanitizedContent);
-  //   let binaryFormat = "";
-  //   for (const instruction of sanitizedContent) {
-  //     if (instruction.startsWith("@")) {
-  //       const [_, decimalPart] = instruction.split("@");
-  //       const convertDecimal = pipe<string>()
-  //         .then(removeCommentsFromInstruction)
-  //         .then((dec) => convertDecToBinary(dec) + "\n");
-  //       binaryFormat += convertDecimal(decimalPart);
-  //     } else {
-  //       const parseCInstruction = pipe<string>()
-  //         .then(removeCommentsFromInstruction)
-  //         .then((innerInstruction) => translateCInstructions(innerInstruction) + "\n");
-  //       binaryFormat += parseCInstruction(instruction);
-  //     }
-  //   }
+  const tryParse = pipe<string>()
+    .then(removeWhitespaceAndComments)
+    .then(addAddressesOfLabelsToAddressMap)
+    .then(removeLabelsFromInstructionList)
+    .then(replacePrefinedSymbolsAndLabelsWithAddresses);
 
-  //   try {
-  //     Bun.write(`${extractFileName(filePath)}.hack`, binaryFormat);
-  //   } catch (error) {
-  //     console.log("Something went wrong when saving to a file");
-  //   }
+  const instructionList = tryParse(text);
 
-  return "";
+  let binaryFormat = "";
+  for (const instruction of instructionList) {
+    if (instruction.startsWith("@")) {
+      const convertDecimal = pipe<string>()
+        .then(removeCommentsFromInstruction)
+        .then((instruction) => translateAInstruction(instruction) + "\n");
+      binaryFormat += convertDecimal(instruction);
+    } else {
+      const parseCInstruction = pipe<string>()
+        .then(removeCommentsFromInstruction)
+        .then((innerInstruction) => translateCInstruction(innerInstruction) + "\n");
+      binaryFormat += parseCInstruction(instruction);
+    }
+  }
+
+  try {
+    Bun.write(`${extractFileName(filePath)}.hack`, binaryFormat);
+  } catch (error) {
+    console.log("Something went wrong when saving to a file");
+  }
+
+  return binaryFormat;
 };
 
-export function updateAddMapWithLabels(sanitizedContent: string[]) {
+function replacePrefinedSymbolsAndLabelsWithAddresses({
+  addresses,
+  instructionList,
+}: {
+  instructionList: string[];
+  addresses: Map<string, string>;
+}) {
+  return instructionList.map((instruction) => {
+    const cleanedInstruction = instruction.replace("@", "");
+    const address = addresses.get(cleanedInstruction);
+
+    if (address !== undefined) {
+      return `@${address}`;
+    }
+
+    return instruction;
+  });
+}
+
+const removeLabelsFromInstructionList = ({
+  addresses,
+  instructionList,
+}: {
+  instructionList: string[];
+  addresses: Map<string, string>;
+}) => ({
+  instructionList: instructionList.filter(removeLabels),
+  addresses,
+});
+
+export function addAddressesOfLabelsToAddressMap(instructionList: string[]) {
   const addresses = new Map<string, string>(preDefinedSymsAndLabels);
 
   let foundLabelCount = 0;
 
-  for (const [idx, instruction] of sanitizedContent.entries()) {
-    const trimmedInstruction = removeCommentsFromInstruction(instruction.trim());
+  for (const [idx, instruction] of instructionList.entries()) {
+    const trimmedInstruction = removeCommentsFromInstruction(instruction);
     const label = extractLabelInParentheses(trimmedInstruction);
 
     if (label) {
@@ -50,7 +89,7 @@ export function updateAddMapWithLabels(sanitizedContent: string[]) {
     }
   }
 
-  return addresses;
+  return { addresses, instructionList };
 }
 
 await parse("./test-files/Max.asm");

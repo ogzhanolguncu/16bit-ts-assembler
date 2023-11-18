@@ -2,7 +2,7 @@ import { compTable, destTable, jumpTable } from "../constants/instruction-tables
 
 const PREFIX = "111";
 
-export const translateCInstructions = (instruction: string): string => {
+export const translateCInstruction = (instruction: string): string => {
   const { comp, dest, jmp } = extractHeadAndTail(instruction);
 
   const destTableResult = destTable[dest ?? "null"];
@@ -10,15 +10,6 @@ export const translateCInstructions = (instruction: string): string => {
   const jumpTableResult = jumpTable[jmp ?? "null"];
 
   return `${PREFIX}${compTableResult}${destTableResult}${jumpTableResult}`;
-};
-
-export const convertDecToBinary = (value: string): string => {
-  let binary = Number(value).toString(2);
-
-  while (binary.length < 16) {
-    binary = "0" + binary;
-  }
-  return binary;
 };
 
 const extractHeadAndTail = (instruction: string): { comp: string; jmp: string; dest: string } => {

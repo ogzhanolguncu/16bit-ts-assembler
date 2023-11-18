@@ -31,14 +31,16 @@ export const extractLabelInParentheses = (instruction: string): string | null =>
   const regex = /\(([^)]+)\)/;
   const match = instruction.match(regex);
 
-  if (match) {
-    return match[1];
-  }
-  return null;
+  return match ? match[1] : null;
 };
 
-export function removeNewlineAndComments(text: string) {
-  return text.split("\r\n").filter((line) => !line.startsWith("//") && line !== "");
+export const removeLabels = (instruction: string) => !extractLabelInParentheses(instruction);
+
+export function removeWhitespaceAndComments(text: string) {
+  return text
+    .split("\r\n")
+    .filter((line) => !line.startsWith("//") && line !== "")
+    .map((instruction) => instruction.trim() && removeCommentsFromInstruction(instruction));
 }
 
 export async function readFile(filePath: string) {
