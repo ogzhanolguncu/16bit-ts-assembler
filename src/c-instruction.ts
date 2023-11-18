@@ -1,4 +1,6 @@
-import { compTable, destTable, jumpTable } from "./instruction-tables";
+import { compTable, destTable, jumpTable, preDefinedSymbols } from "./instruction-tables";
+
+const PREFIX = "111";
 
 export const translateCInstructions = (instruction: string): string => {
   const { comp, dest, jmp } = extractHeadAndTail(instruction);
@@ -7,9 +9,7 @@ export const translateCInstructions = (instruction: string): string => {
   const compTableResult = compTable[comp];
   const jumpTableResult = jumpTable[jmp ?? "null"];
 
-  const prefix = "111";
-
-  return `${prefix}${compTableResult}${destTableResult}${jumpTableResult}`;
+  return `${PREFIX}${compTableResult}${destTableResult}${jumpTableResult}`;
 };
 
 export const convertDecToBinary = (value: string): string => {
@@ -22,16 +22,30 @@ export const convertDecToBinary = (value: string): string => {
 };
 
 const extractHeadAndTail = (instruction: string): { comp: string; jmp: string; dest: string } => {
-  if (instruction.includes("=") || (instruction.includes(";") && instruction.includes("="))) {
-    const [dest, tail] = instruction.split("=");
-    const [comp, jmp] = tail.split(";");
-    return { comp, jmp, dest };
-  } else if (instruction.includes(";")) {
-    let dest = "null";
-    const [comp, jmp] = instruction.split(";");
-    return { comp, jmp, dest };
-  } else {
-    console.error(`Unknown instruction: ${instruction}`);
-    throw new Error("Unknown instruction");
+  // Input validation
+  if (typeof instruction !== "string") {
+    console.error("Invalid input. Expected a string.");
+    throw new Error("Invalid input");
+  }
+
+  switch (true) {
+    case instruction.includes("=") || (instruction.includes(";") && instruction.includes("=")): {
+      // Extract dest, comp, and jmp
+      const [dest, tail] = instruction.split("=");
+      const [comp, jmp] = tail.split(";");
+      return { comp, jmp, dest };
+    }
+
+    case instruction.includes(";"): {
+      // Extract comp and jmp
+      const [comp, jmp] = instruction.split(";");
+      return { comp, jmp, dest: "null" };
+    }
+
+    default: {
+      // Handle unknown instructions
+      console.error(`Unknown instruction: ${instruction}`);
+      throw new Error(`Unknown instruction: ${instruction}`);
+    }
   }
 };

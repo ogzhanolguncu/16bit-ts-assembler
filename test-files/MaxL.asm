@@ -5,7 +5,7 @@
 
 // Symbol-less version of the Max.asm program.
 
-@0
+@R0
 D=M
 @1
 D=D-M

@@ -1,5 +1,5 @@
 import { convertDecToBinary, translateCInstructions } from "./c-instruction";
-import { extractFileName } from "./utils";
+import { extractFileName, pipe, removeCommentsFromInstruction } from "./utils";
 
 export const parse = async (filePath: string) => {
   const file = Bun.file(filePath);
@@ -10,9 +10,15 @@ export const parse = async (filePath: string) => {
   for (const instruction of sanitizedContent) {
     if (instruction.startsWith("@")) {
       const [_, decimalPart] = instruction.split("@");
-      binaryFormat += convertDecToBinary(decimalPart) + "\n";
+      const convertDecimal = pipe<string>()
+        .then(removeCommentsFromInstruction)
+        .then((dec) => convertDecToBinary(dec) + "\n");
+      binaryFormat += convertDecimal(decimalPart);
     } else {
-      binaryFormat += translateCInstructions(instruction) + "\n";
+      const parseCInstruction = pipe<string>()
+        .then(removeCommentsFromInstruction)
+        .then((innerInstruction) => translateCInstructions(innerInstruction) + "\n");
+      binaryFormat += parseCInstruction(instruction);
     }
   }
 
