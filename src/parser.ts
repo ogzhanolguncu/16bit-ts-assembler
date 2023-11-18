@@ -12,9 +12,9 @@ export const parse = async (filePath: string) => {
 
     if (instruction.startsWith("@")) {
       const [_, decimalPart] = instruction.split("@");
-      binaryFormat += convertDecToBinary(decimalPart) + (last ? "" : "\n");
+      binaryFormat += convertDecToBinary(decimalPart) + "\n";
     } else {
-      binaryFormat += translateCInstructions(instruction) + (last ? "" : "\n");
+      binaryFormat += translateCInstructions(instruction) + "\n";
     }
   }
 
@@ -27,4 +27,4 @@ export const parse = async (filePath: string) => {
   return binaryFormat;
 };
 
-await parse("./test-files/Add.asm");
+await parse("./test-files/MaxL.asm");

@@ -1,8 +1,8 @@
 import { compTable, destTable, jumpTable } from "./instruction-tables";
 
 export const translateCInstructions = (instruction: string): string => {
-  const [dest, tail] = instruction.split("=");
-  const [comp, jmp] = tail.split(";");
+  const { comp, dest, jmp } = extractHeadAndTail(instruction);
+
   const destTableResult = destTable[dest ?? "null"];
   const compTableResult = compTable[comp];
   const jumpTableResult = jumpTable[jmp ?? "null"];
@@ -19,4 +19,19 @@ export const convertDecToBinary = (value: string): string => {
     binary = "0" + binary;
   }
   return binary;
+};
+
+const extractHeadAndTail = (instruction: string): { comp: string; jmp: string; dest: string } => {
+  if (instruction.includes("=") || (instruction.includes(";") && instruction.includes("="))) {
+    const [dest, tail] = instruction.split("=");
+    const [comp, jmp] = tail.split(";");
+    return { comp, jmp, dest };
+  } else if (instruction.includes(";")) {
+    let dest = "null";
+    const [comp, jmp] = instruction.split(";");
+    return { comp, jmp, dest };
+  } else {
+    console.error(`Unknown instruction: ${instruction}`);
+    throw new Error("Unknown instruction");
+  }
 };
