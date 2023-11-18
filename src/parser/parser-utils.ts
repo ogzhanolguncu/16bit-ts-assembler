@@ -38,9 +38,9 @@ export const removeLabels = (instruction: string) => !extractLabelInParentheses(
 
 export function removeWhitespaceAndComments(text: string) {
   return text
-    .split("\r\n")
+    .split(/[\r\n]+/) // Split by one or more newline characters
     .filter((line) => !line.startsWith("//") && line !== "")
-    .map((instruction) => instruction.trim() && removeCommentsFromInstruction(instruction));
+    .map((instruction) => removeCommentsFromInstruction(instruction.replaceAll("\t", "").trim()));
 }
 
 export async function readFile(filePath: string) {

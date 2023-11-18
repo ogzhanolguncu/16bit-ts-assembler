@@ -17,24 +17,26 @@ export const parse = async (filePath: string) => {
     .then(addAddressesOfLabelsToAddressMap)
     .then(removeLabelsFromInstructionList)
     .then(replacePrefinedSymbolsAndLabelsWithAddresses);
+  //TODO:Add one more step here to address custom symbols
 
   const instructionList = tryParse(text);
-
+  if (!instructionList.length) throw new Error("Something went wrong when parsing!");
+  console.log({ instructionList });
   let binaryFormat = "";
+
   for (const instruction of instructionList) {
     if (instruction.startsWith("@")) {
       const convertDecimal = pipe<string>()
         .then(removeCommentsFromInstruction)
-        .then((instruction) => translateAInstruction(instruction) + "\n");
+        .then((instruction) => `${translateAInstruction(instruction)}\n`);
       binaryFormat += convertDecimal(instruction);
     } else {
       const parseCInstruction = pipe<string>()
         .then(removeCommentsFromInstruction)
-        .then((innerInstruction) => translateCInstruction(innerInstruction) + "\n");
+        .then((innerInstruction) => `${translateCInstruction(innerInstruction)}\n`);
       binaryFormat += parseCInstruction(instruction);
     }
   }
-
   try {
     Bun.write(`${extractFileName(filePath)}.hack`, binaryFormat);
   } catch (error) {
@@ -92,4 +94,4 @@ export function addAddressesOfLabelsToAddressMap(instructionList: string[]) {
   return { addresses, instructionList };
 }
 
-await parse("./test-files/Max.asm");
+await parse("./test-files/MaxWithSymbol.asm");
