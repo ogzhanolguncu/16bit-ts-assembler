@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { convertDecToBinary, translateCInstructions } from "./c-instruction";
+import { convertDecToBinary, translateCInstructions } from ".";
 
 describe("C-Instruction with destination and computation", () => {
   test("should parse simple c instruction", () => {

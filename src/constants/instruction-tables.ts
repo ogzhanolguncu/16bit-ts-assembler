@@ -60,7 +60,7 @@ export const jumpTable: Record<string, string> = {
   JMP: "111",
 };
 
-export const preDefinedSymsAndLabels = new Map<string, string>([
+export const preDefinedSymsAndLabels: [string, string][] = [
   ["R0", "0"],
   ["SP", "0"],
   ["R1", "1"],
@@ -84,4 +84,4 @@ export const preDefinedSymsAndLabels = new Map<string, string>([
   ["R15", "15"],
   ["SCREEN", "16384"],
   ["KBD", "24576"],
-]);
+];

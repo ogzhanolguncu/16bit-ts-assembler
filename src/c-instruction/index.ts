@@ -1,4 +1,4 @@
-import { compTable, destTable, jumpTable, preDefinedSymbols } from "./instruction-tables";
+import { compTable, destTable, jumpTable } from "../constants/instruction-tables";
 
 const PREFIX = "111";
 
