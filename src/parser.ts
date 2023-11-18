@@ -8,8 +8,6 @@ export const parse = async (filePath: string) => {
   const sanitizedContent = text.split("\r\n").filter((x) => !x.startsWith("//") && x !== "");
   let binaryFormat = "";
   for (const instruction of sanitizedContent) {
-    const last = sanitizedContent[sanitizedContent.length - 1] === instruction;
-
     if (instruction.startsWith("@")) {
       const [_, decimalPart] = instruction.split("@");
       binaryFormat += convertDecToBinary(decimalPart) + "\n";
