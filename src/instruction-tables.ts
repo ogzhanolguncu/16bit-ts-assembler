@@ -60,7 +60,7 @@ export const jumpTable: Record<string, string> = {
   JMP: "111",
 };
 
-export const preDefinedSymbols = new Map<string, string>([
+export const preDefinedSymsAndLabels = new Map<string, string>([
   ["R0", "0"],
   ["SP", "0"],
   ["R1", "1"],

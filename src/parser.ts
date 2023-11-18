@@ -5,8 +5,11 @@ export const parse = async (filePath: string) => {
   const file = Bun.file(filePath);
   const text = await file.text();
 
-  const sanitizedContent = text.split("\r\n").filter((x) => !x.startsWith("//") && x !== "");
+  const sanitizedContent = text
+    .split("\r\n")
+    .filter((line) => !line.startsWith("//") && line !== "");
   let binaryFormat = "";
+
   for (const instruction of sanitizedContent) {
     if (instruction.startsWith("@")) {
       const [_, decimalPart] = instruction.split("@");

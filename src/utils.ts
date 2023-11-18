@@ -39,6 +39,16 @@ export const removeCommentsFromInstruction = (instruction: string) => {
   return instructionWithoutComment;
 };
 
+export const extractContentInParentheses = (instruction: string): boolean => {
+  const regex = /\(([^)]+)\)/;
+  const match = instruction.match(regex);
+
+  if (match) {
+    return true;
+  }
+  return false;
+};
+
 type Fn<A, B> = (_: A) => B;
 
 interface Pipe<A, B> extends Fn<A, B> {
