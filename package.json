@@ -1,6 +1,6 @@
 {
   "name": "bun-assembler",
-  "module": "index.ts",
+  "module": "./src/parser/index.ts",
   "type": "module",
   "devDependencies": {
     "@biomejs/biome": "1.3.3",
@@ -8,5 +8,9 @@
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
+  },
+  "scripts": {
+    "parse": "bun ./src/parser/index.ts",
+    "build": "bun build ./src/parser/index.ts --compile --outfile 16bit-assembler"
   }
 }

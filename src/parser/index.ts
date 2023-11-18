@@ -10,20 +10,42 @@ import {
   removeWhitespaceAndComments,
 } from "./parser-utils";
 
-export const parse = async (filePath: string) => {
-  const text = await readFile(filePath);
+const INITIAL_ADDRESS = 16;
+
+export const parse = async () => {
+  const filePath = parseArguments();
+
   const tryParse = pipe<string>()
+    .then(readFile)
     .then(removeWhitespaceAndComments)
     .then(addAddressesOfLabelsToAddressMap)
     .then(removeLabelsFromInstructionList)
-    .then(replacePrefinedSymbolsAndLabelsWithAddresses);
-  //TODO:Add one more step here to address custom symbols
+    .then(replacePrefinedSymbolsAndLabelsWithAddresses)
+    .then(replaceCustomSymbolsWithAddresses)
+    .then(parseCAndAInstructions)
+    .then((binary) => writeToAFile(filePath, binary));
 
-  const instructionList = tryParse(text);
-  if (!instructionList.length) throw new Error("Something went wrong when parsing!");
-  console.log({ instructionList });
+  tryParse(filePath);
+};
+
+function parseArguments() {
+  const filePath = Bun.argv.at(-1);
+  if (!filePath || !filePath.includes(".asm")) {
+    throw new Error("File path is missing!. Example: bun run parse file=./test-files/Add.asm");
+  }
+  return filePath;
+}
+
+function writeToAFile(filePath: string, binaryFormat: string) {
+  try {
+    Bun.write(`${extractFileName(filePath)}.hack`, binaryFormat);
+  } catch (error) {
+    console.log("Something went wrong when saving to a file");
+  }
+}
+
+function parseCAndAInstructions({ instructionList }: { instructionList: string[] }) {
   let binaryFormat = "";
-
   for (const instruction of instructionList) {
     if (instruction.startsWith("@")) {
       const convertDecimal = pipe<string>()
@@ -37,14 +59,39 @@ export const parse = async (filePath: string) => {
       binaryFormat += parseCInstruction(instruction);
     }
   }
-  try {
-    Bun.write(`${extractFileName(filePath)}.hack`, binaryFormat);
-  } catch (error) {
-    console.log("Something went wrong when saving to a file");
+  return binaryFormat;
+}
+
+function replaceCustomSymbolsWithAddresses({
+  addresses,
+  instructionList,
+}: {
+  instructionList: string[];
+  addresses: Map<string, string>;
+}) {
+  //Starts from 16, because first 15 is reserved for prefined addresses
+  let nextAddress = INITIAL_ADDRESS;
+
+  for (let idx = 0; idx < instructionList.length; idx++) {
+    const instruction = instructionList[idx];
+
+    const matchSymbol = /@([a-zA-Z_][a-zA-Z_\d.]*)/.exec(instruction);
+
+    if (matchSymbol) {
+      const symbol = matchSymbol[1];
+
+      if (!addresses.has(symbol)) {
+        addresses.set(symbol, nextAddress.toString());
+        instructionList[idx] = `@${nextAddress.toString()}`;
+        nextAddress++;
+      } else {
+        instructionList[idx] = `@${addresses.get(symbol)}`;
+      }
+    }
   }
 
-  return binaryFormat;
-};
+  return { instructionList, addresses };
+}
 
 function replacePrefinedSymbolsAndLabelsWithAddresses({
   addresses,
@@ -53,16 +100,19 @@ function replacePrefinedSymbolsAndLabelsWithAddresses({
   instructionList: string[];
   addresses: Map<string, string>;
 }) {
-  return instructionList.map((instruction) => {
-    const cleanedInstruction = instruction.replace("@", "");
-    const address = addresses.get(cleanedInstruction);
+  return {
+    instructionList: instructionList.map((instruction) => {
+      const cleanedInstruction = instruction.replace("@", "");
+      const address = addresses.get(cleanedInstruction);
 
-    if (address !== undefined) {
-      return `@${address}`;
-    }
+      if (address !== undefined) {
+        return `@${address}`;
+      }
 
-    return instruction;
-  });
+      return instruction;
+    }),
+    addresses,
+  };
 }
 
 const removeLabelsFromInstructionList = ({
@@ -94,4 +144,4 @@ export function addAddressesOfLabelsToAddressMap(instructionList: string[]) {
   return { addresses, instructionList };
 }
 
-await parse("./test-files/MaxWithSymbol.asm");
+await parse();

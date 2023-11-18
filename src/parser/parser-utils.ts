@@ -1,3 +1,5 @@
+import { readFileSync } from "fs";
+
 export const removeCommentsFromInstruction = (instruction: string) => {
   const trimmedInstruction = instruction.replaceAll(" ", "");
   let instructionWithoutComment = "";
@@ -37,14 +39,21 @@ export const extractLabelInParentheses = (instruction: string): string | null =>
 export const removeLabels = (instruction: string) => !extractLabelInParentheses(instruction);
 
 export function removeWhitespaceAndComments(text: string) {
-  return text
+  const output = text
     .split(/[\r\n]+/) // Split by one or more newline characters
     .filter((line) => !line.startsWith("//") && line !== "")
     .map((instruction) => removeCommentsFromInstruction(instruction.replaceAll("\t", "").trim()));
+
+  if (output.length === 0) throw new Error("removeWhitespaceAndComments failed output is empty!");
+  return output;
 }
 
-export async function readFile(filePath: string) {
-  const file = Bun.file(filePath);
-  const text = await file.text();
-  return text;
+export function readFile(filePath: string): string {
+  try {
+    const text = readFileSync(filePath, "utf-8");
+    return text;
+  } catch (error) {
+    console.error(`Error reading file: ${(error as Error).message}`);
+    throw error;
+  }
 }
